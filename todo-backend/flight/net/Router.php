@@ -22,18 +22,11 @@ class Router {
     protected $routes = array();
 
     /**
-     * Pointer to current route.
+     * Pointer to current route
      *
      * @var int
      */
     protected $index = 0;
-
-    /**
-     * Case sensitive matching.
-     *
-     * @var boolean
-     */
-    public $case_sensitive = false;
 
     /**
      * Gets mapped routes.
@@ -45,7 +38,7 @@ class Router {
     }
 
     /**
-     * Clears all routes in the router.
+     * Clears all routes the router.
      */
     public function clear() {
         $this->routes = array();
@@ -56,31 +49,29 @@ class Router {
      *
      * @param string $pattern URL pattern to match
      * @param callback $callback Callback function
-     * @param boolean $pass_route Pass the matching route object to the callback
      */
-    public function map($pattern, $callback, $pass_route = false) {
-        $url = $pattern;
-        $methods = array('*');
-
+    public function map($pattern, $callback) {
         if (strpos($pattern, ' ') !== false) {
             list($method, $url) = explode(' ', trim($pattern), 2);
 
             $methods = explode('|', $method);
-        }
 
-        $this->routes[] = new Route($url, $callback, $methods, $pass_route);
+            array_push($this->routes, new Route($url, $callback, $methods));
+        }
+        else {
+            array_push($this->routes, new Route($pattern, $callback, array('*')));
+        }
     }
 
     /**
      * Routes the current request.
      *
      * @param Request $request Request object
-     * @return Route|bool Matching route or false if no match
+     * @return Route Matching route
      */
     public function route(Request $request) {
-        $url_decoded = urldecode( $request->url );
         while ($route = $this->current()) {
-            if ($route !== false && $route->matchMethod($request->method) && $route->matchUrl($url_decoded, $this->case_sensitive)) {
+            if ($route !== false && $route->matchMethod($request->method) && $route->matchUrl($request->url)) {
                 return $route;
             }
             $this->next();
